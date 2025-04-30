@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll.it</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo-container">
+                <svg class="logo-image" width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="30" cy="30" r="28" stroke="url(#gradient)" stroke-width="4"/>
+                    <path d="M20 30C20 24.4772 24.4772 20 30 20C35.5228 20 40 24.4772 40 30C40 35.5228 35.5228 40 30 40" stroke="url(#gradient)" stroke-width="4" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#2563eb"/>
+                            <stop offset="1" stop-color="#1e40af"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="logo">Poll.it</div>
+            </div>
+        </nav>
+        <div class="search-container">
+            <input type="text" class="search-bar" placeholder="Search for news...">
+            <button class="search-button">Search</button>
+        </div>
+        <div class="category-menu">
+            <button class="category-btn active" data-category="all">All News</button>
+            <button class="category-btn" data-category="politics">Politics</button>
+            <button class="category-btn" data-category="technology">Technology</button>
+            <button class="category-btn" data-category="business">Business</button>
+            <button class="category-btn" data-category="science">Science</button>
+            <button class="category-btn" data-category="health">Health</button>
+            <button class="category-btn" data-category="entertainment">Entertainment</button>
+            <button class="category-btn" data-category="sports">Sports</button>
+            <button class="category-btn" data-category="environment">Environment</button>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <div class="content-wrapper" id="articles-container">
+            <!-- Articles will be dynamically inserted here -->
+        </div>
+        <div class="navigation-controls">
+            <button id="prev-button" class="nav-button">←</button>
+            <button id="next-button" class="nav-button">→</button>
+        </div>
+    </main>
+
+    <div id="article-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Full Article</h2>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="copyright-footer">
+        <p>&copy; 2025 Rahul Arora. All rights reserved.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html> 
