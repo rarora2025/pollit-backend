@@ -1,7 +1,45 @@
 // API configuration
-const API_BASE_URL = window.location.hostname === 'localhost' 
+const isLocalDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE_URL = isLocalDevelopment
     ? 'http://localhost:3000/api'
     : 'https://pollit-backend-6b36ba4351c1.herokuapp.com/api';
+
+// Mock data for development
+const mockArticles = [
+    {
+        title: "Tech Giants Announce New AI Partnership",
+        description: "Major technology companies join forces to advance artificial intelligence research and development.",
+        urlToImage: "https://picsum.photos/800/400",
+        source: { name: "Tech News" },
+        publishedAt: new Date().toISOString(),
+        url: "#"
+    },
+    {
+        title: "Global Climate Summit Reaches New Agreement",
+        description: "World leaders agree on ambitious new targets to combat climate change.",
+        urlToImage: "https://picsum.photos/800/401",
+        source: { name: "Environmental Times" },
+        publishedAt: new Date().toISOString(),
+        url: "#"
+    },
+    {
+        title: "Breakthrough in Medical Research",
+        description: "Scientists discover new treatment method for chronic diseases.",
+        urlToImage: "https://picsum.photos/800/402",
+        source: { name: "Health Journal" },
+        publishedAt: new Date().toISOString(),
+        url: "#"
+    }
+];
+
+// Common fetch options for CORS
+const fetchOptions = {
+    mode: 'cors',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+};
 
 // News categories and their corresponding API queries
 const newsCategories = {
@@ -54,8 +92,16 @@ async function getNewsByCategory(category) {
         throw new Error('Invalid category');
     }
 
+    if (isLocalDevelopment) {
+        // Return mock data for development
+        return {
+            status: 'ok',
+            articles: mockArticles
+        };
+    }
+
     try {
-        const response = await fetch(`${API_BASE_URL}/category/${category}`);
+        const response = await fetch(`${API_BASE_URL}/category/${category}`, fetchOptions);
         const data = await response.json();
         return data;
     } catch (error) {
@@ -104,8 +150,33 @@ async function fetchNews() {
     showLoading();
     
     try {
+        if (isLocalDevelopment) {
+            // Use mock data for development
+            console.log('Using mock data for development');
+            const mockData = {
+                status: 'ok',
+                articles: mockArticles
+            };
+            
+            if (mockData.status === 'ok' && mockData.articles && mockData.articles.length > 0) {
+                console.log('Total articles received:', mockData.articles.length);
+                articles = mockData.articles.filter(article => article.urlToImage);
+                console.log('Articles with images:', articles.length);
+                
+                if (articles.length === 0) {
+                    throw new Error('No articles with images found');
+                }
+                
+                currentIndex = 0;
+                await displayArticles();
+            } else {
+                throw new Error('Invalid mock data');
+            }
+            return;
+        }
+
         console.log('Making API request to backend...');
-        const response = await fetch(`${API_BASE_URL}/news`);
+        const response = await fetch(`${API_BASE_URL}/news`, fetchOptions);
         console.log('API Response status:', response.status);
         
         if (!response.ok) {
@@ -148,12 +219,24 @@ async function fetchNews() {
 
 // Generate poll content using OpenAI
 async function generatePollContent(article) {
+    if (isLocalDevelopment) {
+        // Return mock poll content for development
+        return {
+            question: "What's your take on this news?",
+            answers: [
+                "Very positive",
+                "Somewhat positive",
+                "Neutral",
+                "Somewhat negative",
+                "Very negative"
+            ]
+        };
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/generate-content`, {
+            ...fetchOptions,
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
             body: JSON.stringify({ article })
         });
 
@@ -375,7 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchTerm) {
             try {
                 showLoading();
-                const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`);
+                const response = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(searchTerm)}`, fetchOptions);
                 const data = await response.json();
                 
                 if (data.status === 'ok' && data.articles) {
