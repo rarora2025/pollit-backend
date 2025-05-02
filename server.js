@@ -18,7 +18,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
     origin: ['http://localhost:3000', 'https://rarora2025.github.io'],
     methods: ['GET', 'POST'],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Accept']
 }));
 
 // Parse JSON bodies
