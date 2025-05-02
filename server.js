@@ -121,12 +121,11 @@ app.get('/api/news', async (req, res) => {
         
         // Handle different types of queries
         if (query === 'top') {
-            // For top news, use the headlines endpoint
-            url = `${NEWS_API_BASE_URL}/top-headlines?country=us&apiKey=${NEWS_API_KEY}&pageSize=100`;
+            // For top news, use the headlines endpoint with more specific parameters
+            url = `${NEWS_API_BASE_URL}/top-headlines?country=us&apiKey=${NEWS_API_KEY}&pageSize=100&sortBy=publishedAt`;
         } else {
-            // For categories and search, use the everything endpoint
-            // Let the News API handle the filtering and sorting
-            url = `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(query)}&apiKey=${NEWS_API_KEY}&language=en&sortBy=relevancy&pageSize=100`;
+            // For categories and search, use the everything endpoint with more specific parameters
+            url = `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(query)}&apiKey=${NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=100`;
         }
         
         console.log('Making request to News API:', url);
@@ -134,13 +133,35 @@ app.get('/api/news', async (req, res) => {
         const data = await response.json();
         
         if (data.status === 'ok') {
-            // Only filter out articles without images
-            const filteredArticles = data.articles.filter(article => 
-                article.urlToImage && 
-                article.title && 
-                article.description
-            );
+            // More thorough filtering of articles
+            const filteredArticles = data.articles.filter(article => {
+                // Must have all required fields
+                if (!article.urlToImage || !article.title || !article.description) {
+                    return false;
+                }
+                
+                // Description must be meaningful
+                if (article.description.length < 50) {
+                    return false;
+                }
+                
+                // Title must be meaningful
+                if (article.title.length < 10) {
+                    return false;
+                }
+                
+                // For non-top queries, ensure relevance
+                if (query !== 'top') {
+                    const searchTerms = query.toLowerCase().split(' ');
+                    const content = `${article.title} ${article.description}`.toLowerCase();
+                    return searchTerms.some(term => content.includes(term));
+                }
+                
+                return true;
+            });
 
+            console.log(`Found ${filteredArticles.length} articles after filtering`);
+            
             // Return the filtered articles
             res.json({
                 status: 'ok',
