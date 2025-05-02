@@ -16,11 +16,13 @@ const PORT = process.env.PORT || 3000;
 
 // Enable CORS for all routes
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://rarora2025.github.io'],
-    methods: ['GET', 'POST'],
-    credentials: true,
+    origin: '*',  // Allow all origins
+    methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept']
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Parse JSON bodies
 app.use(express.json());

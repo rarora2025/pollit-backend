@@ -9,8 +9,7 @@ const fetchOptions = {
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
-    },
-    credentials: 'include'
+    }
 };
 
 // News categories and their corresponding API queries
