@@ -125,12 +125,21 @@ app.get('/api/news', async (req, res) => {
             url = `${NEWS_API_BASE_URL}/top-headlines?country=us&apiKey=${NEWS_API_KEY}&pageSize=100&sortBy=publishedAt`;
         } else {
             // For categories and search, use the everything endpoint with more specific parameters
-            url = `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(query)}&apiKey=${NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=100`;
+            // Add quotes around the query for exact phrase matching
+            const formattedQuery = query.includes(' ') ? `"${query}"` : query;
+            url = `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(formattedQuery)}&apiKey=${NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=100`;
         }
         
         console.log('Making request to News API:', url);
         const response = await fetch(url);
+        
+        if (!response.ok) {
+            console.error('News API error response:', response.status, response.statusText);
+            throw new Error(`News API error: ${response.status} ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log('News API response status:', data.status);
         
         if (data.status === 'ok') {
             // More thorough filtering of articles
@@ -154,13 +163,43 @@ app.get('/api/news', async (req, res) => {
                 if (query !== 'top') {
                     const searchTerms = query.toLowerCase().split(' ');
                     const content = `${article.title} ${article.description}`.toLowerCase();
-                    return searchTerms.some(term => content.includes(term));
+                    // For multi-word queries, require all words to be present
+                    if (searchTerms.length > 1) {
+                        return searchTerms.every(term => content.includes(term));
+                    }
+                    // For single-word queries, require the word to be present
+                    return content.includes(searchTerms[0]);
                 }
                 
                 return true;
             });
 
-            console.log(`Found ${filteredArticles.length} articles after filtering`);
+            console.log(`Found ${filteredArticles.length} articles after filtering for query: ${query}`);
+            
+            if (filteredArticles.length === 0 && query !== 'top') {
+                // If no articles found for a specific query, try a broader search
+                const broaderUrl = `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(query.split(' ')[0])}&apiKey=${NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=100`;
+                console.log('Trying broader search:', broaderUrl);
+                
+                const broaderResponse = await fetch(broaderUrl);
+                const broaderData = await broaderResponse.json();
+                
+                if (broaderData.status === 'ok') {
+                    const broaderArticles = broaderData.articles.filter(article => 
+                        article.urlToImage && 
+                        article.title && 
+                        article.description &&
+                        article.description.length >= 50 &&
+                        article.title.length >= 10
+                    );
+                    
+                    console.log(`Found ${broaderArticles.length} articles in broader search`);
+                    return res.json({
+                        status: 'ok',
+                        articles: broaderArticles
+                    });
+                }
+            }
             
             // Return the filtered articles
             res.json({
