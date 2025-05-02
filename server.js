@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3000;
 
 // CORS configuration
 app.use(cors({
-    origin: ['https://rarora2025.github.io', 'http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: '*',  // Allow all origins in production
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept'],
     credentials: false
@@ -129,7 +129,14 @@ app.get('/api/news', async (req, res) => {
         
         console.log('Making request to News API:', url);
         const response = await fetch(url);
+        
+        if (!response.ok) {
+            console.error('News API error response:', response.status, response.statusText);
+            throw new Error(`News API error: ${response.status} ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log('News API response status:', data.status);
         
         if (data.status === 'ok') {
             // Simple filtering to ensure we have valid articles
@@ -140,6 +147,8 @@ app.get('/api/news', async (req, res) => {
                 article.description.length > 30
             );
 
+            console.log(`Found ${filteredArticles.length} articles after filtering`);
+            
             // Return the filtered articles
             res.json({
                 status: 'ok',
