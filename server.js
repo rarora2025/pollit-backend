@@ -83,15 +83,19 @@ app.get('/api/proxy-image', async (req, res) => {
     try {
         const imageUrl = req.query.url;
         if (!imageUrl) {
+            console.log('No image URL provided, using fallback');
             return res.sendFile(path.join(__dirname, 'public', 'fallback.svg'));
         }
 
+        console.log('Proxying image from:', imageUrl);
+        
         // Try to fetch the original image first
         const response = await fetch(imageUrl);
         if (!response.ok) {
             console.error(`Failed to fetch image from ${imageUrl}: ${response.status} ${response.statusText}`);
             // Use picsum.photos as a fallback
             const fallbackUrl = `https://picsum.photos/800/400?random=${Math.random()}`;
+            console.log('Using fallback image:', fallbackUrl);
             const fallbackResponse = await fetch(fallbackUrl);
             res.set('Content-Type', fallbackResponse.headers.get('content-type'));
             fallbackResponse.body.pipe(res);
@@ -107,6 +111,7 @@ app.get('/api/proxy-image', async (req, res) => {
         console.error('Error proxying image:', error);
         // Use picsum.photos as a fallback
         const fallbackUrl = `https://picsum.photos/800/400?random=${Math.random()}`;
+        console.log('Using fallback image due to error:', fallbackUrl);
         const fallbackResponse = await fetch(fallbackUrl);
         res.set('Content-Type', fallbackResponse.headers.get('content-type'));
         fallbackResponse.body.pipe(res);
@@ -140,14 +145,25 @@ app.get('/api/news', async (req, res) => {
         
         if (data.status === 'ok') {
             // Simple filtering to ensure we have valid articles
-            const filteredArticles = data.articles.filter(article => 
-                article.urlToImage && 
-                article.title && 
-                article.description &&
-                article.description.length > 30
-            );
+            const filteredArticles = data.articles.filter(article => {
+                const hasImage = article.urlToImage && article.urlToImage.startsWith('http');
+                const hasTitle = article.title && article.title.length > 0;
+                const hasDescription = article.description && article.description.length > 30;
+                
+                if (!hasImage) {
+                    console.log('Article filtered out - no valid image:', article.title);
+                }
+                if (!hasTitle) {
+                    console.log('Article filtered out - no valid title');
+                }
+                if (!hasDescription) {
+                    console.log('Article filtered out - no valid description:', article.title);
+                }
+                
+                return hasImage && hasTitle && hasDescription;
+            });
 
-            console.log(`Found ${filteredArticles.length} articles after filtering`);
+            console.log(`Found ${filteredArticles.length} articles after filtering for query: ${query}`);
             
             // Return the filtered articles
             res.json({
