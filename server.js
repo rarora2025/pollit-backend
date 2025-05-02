@@ -139,8 +139,9 @@ app.get('/api/news', async (req, res) => {
         if (query === 'top') {
             url = `${NEWS_API_BASE_URL}/top-headlines?country=us&apiKey=${NEWS_API_KEY}&pageSize=100`;
         } else {
-            // For categories and search, use the everything endpoint
-            url = `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(query)}&apiKey=${NEWS_API_KEY}&language=en&sortBy=relevancy&pageSize=100`;
+            // For categories and search, use the everything endpoint with proper query formatting
+            const formattedQuery = query.includes('OR') ? `(${query})` : query;
+            url = `${NEWS_API_BASE_URL}/everything?q=${encodeURIComponent(formattedQuery)}&apiKey=${NEWS_API_KEY}&language=en&sortBy=relevancy&pageSize=100`;
         }
         
         console.log('Making request to News API:', url);

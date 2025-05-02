@@ -70,6 +70,7 @@ async function getNewsByCategory(category) {
 
     try {
         showLoading();
+        // Use the category's specific query
         const url = `${API_BASE_URL}/news?q=${encodeURIComponent(categoryInfo.query)}`;
         console.log('Fetching category news from:', url);
         
