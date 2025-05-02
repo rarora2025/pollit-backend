@@ -6,11 +6,16 @@ const API_BASE_URL = window.location.hostname === 'localhost' || window.location
 // Common fetch options for CORS
 const fetchOptions = {
     mode: 'cors',
+    credentials: 'omit',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     }
 };
+
+// Log the current API configuration
+console.log('Current hostname:', window.location.hostname);
+console.log('Using API URL:', API_BASE_URL);
 
 // News categories and their corresponding API queries
 const newsCategories = {

@@ -14,15 +14,20 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Enable CORS for all routes
+// CORS configuration
 app.use(cors({
-    origin: '*',  // Allow all origins for now
+    origin: ['https://rarora2025.github.io', 'http://localhost:3000', 'http://127.0.0.1:3000'],
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Accept']
+    allowedHeaders: ['Content-Type', 'Accept'],
+    credentials: false
 }));
 
-// Handle preflight requests
-app.options('*', cors());
+// Log all incoming requests
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log('Origin:', req.headers.origin);
+    next();
+});
 
 // Parse JSON bodies
 app.use(express.json());
