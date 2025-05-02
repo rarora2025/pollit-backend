@@ -15,7 +15,11 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Enable CORS for all routes
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://rarora2025.github.io'],
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
 
 // Parse JSON bodies
 app.use(express.json());

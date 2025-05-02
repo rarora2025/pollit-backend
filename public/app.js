@@ -1,5 +1,7 @@
 // API configuration
-const API_BASE_URL = '/api';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? '/api'  // Local development
+    : 'https://pollit-news.herokuapp.com/api';  // Production URL
 
 // Common fetch options for CORS
 const fetchOptions = {
