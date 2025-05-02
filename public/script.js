@@ -1,6 +1,7 @@
 import { newsCategories, getNewsByCategory } from './categories.js';
 
-const API_KEY = 'e4386686e99a49b5bcc5eb2966228ce3'; // Your News API key
+// API configuration
+const API_BASE_URL = '/api';
 
 // DOM Elements
 const articlesContainer = document.getElementById('articles-container');
