@@ -70,13 +70,19 @@ async function getNewsByCategory(category) {
 
     try {
         showLoading();
-        console.log('Fetching from:', `${API_BASE_URL}/news?q=${encodeURIComponent(categoryInfo.query)}`);
-        const response = await fetch(`${API_BASE_URL}/news?q=${encodeURIComponent(categoryInfo.query)}`, fetchOptions);
+        const url = `${API_BASE_URL}/news?q=${encodeURIComponent(categoryInfo.query)}`;
+        console.log('Fetching from:', url);
+        
+        const response = await fetch(url, fetchOptions);
+        console.log('Response status:', response.status);
+        
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
+        
         const data = await response.json();
+        console.log('Received data:', data);
         
         if (data.status === 'ok' && data.articles) {
             articles = data.articles;
@@ -150,11 +156,11 @@ async function fetchNews() {
     
     try {
         console.log('Making API request to backend...');
-        // Get top headlines for the "all" category
         const url = `${API_BASE_URL}/news?q=top`;
         console.log('Fetching from:', url);
+        
         const response = await fetch(url, fetchOptions);
-        console.log('API Response status:', response.status);
+        console.log('Response status:', response.status);
         
         if (!response.ok) {
             const errorText = await response.text();
@@ -163,7 +169,7 @@ async function fetchNews() {
         }
         
         const data = await response.json();
-        console.log('API Response data:', data);
+        console.log('Received data:', data);
         
         if (data.status === 'ok' && data.articles && data.articles.length > 0) {
             console.log('Total articles received:', data.articles.length);
