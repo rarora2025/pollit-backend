@@ -65,6 +65,7 @@ async function getNewsByCategory(category) {
 
     try {
         showLoading();
+        console.log('Fetching from:', `${API_BASE_URL}/news?q=${encodeURIComponent(categoryInfo.query)}`);
         const response = await fetch(`${API_BASE_URL}/news?q=${encodeURIComponent(categoryInfo.query)}`, fetchOptions);
         if (!response.ok) {
             const errorData = await response.json();
