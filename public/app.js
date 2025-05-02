@@ -71,10 +71,10 @@ async function getNewsByCategory(category) {
     try {
         showLoading();
         const url = `${API_BASE_URL}/news?q=${encodeURIComponent(categoryInfo.query)}`;
-        console.log('Fetching from:', url);
+        console.log('Fetching category news from:', url);
         
         const response = await fetch(url, fetchOptions);
-        console.log('Response status:', response.status);
+        console.log('Category response status:', response.status);
         
         if (!response.ok) {
             const errorData = await response.json();
@@ -82,7 +82,7 @@ async function getNewsByCategory(category) {
         }
         
         const data = await response.json();
-        console.log('Received data:', data);
+        console.log('Category data received:', data);
         
         if (data.status === 'ok' && data.articles) {
             articles = data.articles;
@@ -102,7 +102,7 @@ async function getNewsByCategory(category) {
             throw new Error('Invalid response from API');
         }
     } catch (error) {
-        console.error('Error fetching news:', error);
+        console.error('Error fetching category news:', error);
         articlesContainer.innerHTML = `
             <div class="error-message">
                 <h2>Error loading articles</h2>
@@ -446,9 +446,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchTerm) {
             try {
                 showLoading();
-                // Use the News API query parameter for search
-                const response = await fetch(`${API_BASE_URL}/news?q=${encodeURIComponent(searchTerm)}`, fetchOptions);
+                const url = `${API_BASE_URL}/news?q=${encodeURIComponent(searchTerm)}`;
+                console.log('Searching news from:', url);
+                
+                const response = await fetch(url, fetchOptions);
+                console.log('Search response status:', response.status);
+                
                 const data = await response.json();
+                console.log('Search data received:', data);
                 
                 if (data.status === 'ok' && data.articles) {
                     articles = data.articles.filter(article => article.urlToImage);

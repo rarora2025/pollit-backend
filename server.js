@@ -89,8 +89,19 @@ app.get('/api/proxy-image', async (req, res) => {
 
         console.log('Proxying image from:', imageUrl);
         
+        // Validate image URL
+        if (!imageUrl.startsWith('http')) {
+            console.log('Invalid image URL format, using fallback');
+            return res.sendFile(path.join(__dirname, 'public', 'fallback.svg'));
+        }
+
         // Try to fetch the original image first
-        const response = await fetch(imageUrl);
+        const response = await fetch(imageUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
+
         if (!response.ok) {
             console.error(`Failed to fetch image from ${imageUrl}: ${response.status} ${response.statusText}`);
             // Use picsum.photos as a fallback
