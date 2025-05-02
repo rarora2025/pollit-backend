@@ -146,7 +146,9 @@ async function fetchNews() {
     try {
         console.log('Making API request to backend...');
         // Get top headlines for the "all" category
-        const response = await fetch(`${API_BASE_URL}/news?q=top`, fetchOptions);
+        const url = `${API_BASE_URL}/news?q=top`;
+        console.log('Fetching from:', url);
+        const response = await fetch(url, fetchOptions);
         console.log('API Response status:', response.status);
         
         if (!response.ok) {

@@ -16,10 +16,9 @@ const PORT = process.env.PORT || 3000;
 
 // Enable CORS for all routes
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://rarora2025.github.io'],
+    origin: '*',  // Allow all origins for now
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Accept'],
-    credentials: false
+    allowedHeaders: ['Content-Type', 'Accept']
 }));
 
 // Handle preflight requests
