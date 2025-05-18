@@ -19,7 +19,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
     origin: '*',  // Allow all origins in production
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization', 'Origin'],
+    exposedHeaders: ['Content-Type', 'Access-Control-Allow-Origin'],
     credentials: false
 }));
 
@@ -27,6 +28,7 @@ app.use(cors({
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     console.log('Origin:', req.headers.origin);
+    console.log('Headers:', req.headers);
     next();
 });
 
@@ -101,7 +103,8 @@ app.get('/api/proxy-image', async (req, res) => {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 'Accept': 'image/*',
-                'Referer': 'https://newsapi.org/'
+                'Referer': 'https://newsapi.org/',
+                'Origin': req.headers.origin || '*'
             }
         });
 
@@ -114,7 +117,8 @@ app.get('/api/proxy-image', async (req, res) => {
             res.set('Content-Type', fallbackResponse.headers.get('content-type'));
             res.set('Access-Control-Allow-Origin', '*');
             res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-            res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, Origin');
+            res.set('Access-Control-Expose-Headers', 'Content-Type, Access-Control-Allow-Origin');
             fallbackResponse.body.pipe(res);
             return;
         }
@@ -123,7 +127,8 @@ app.get('/api/proxy-image', async (req, res) => {
         res.set('Content-Type', response.headers.get('content-type'));
         res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-        res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, Origin');
+        res.set('Access-Control-Expose-Headers', 'Content-Type, Access-Control-Allow-Origin');
         
         // Stream the image data
         response.body.pipe(res);
@@ -136,7 +141,8 @@ app.get('/api/proxy-image', async (req, res) => {
         res.set('Content-Type', fallbackResponse.headers.get('content-type'));
         res.set('Access-Control-Allow-Origin', '*');
         res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-        res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, Origin');
+        res.set('Access-Control-Expose-Headers', 'Content-Type, Access-Control-Allow-Origin');
         fallbackResponse.body.pipe(res);
     }
 });
@@ -192,7 +198,8 @@ app.get('/api/news', async (req, res) => {
             // Set CORS headers
             res.set('Access-Control-Allow-Origin', '*');
             res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-            res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, Origin');
+            res.set('Access-Control-Expose-Headers', 'Content-Type, Access-Control-Allow-Origin');
             
             // Return the filtered articles
             res.json({
@@ -258,14 +265,14 @@ Remember:
             messages: [
                 {
                     role: "system",
-                    content: "You are a news analyst who creates engaging, opinion-based poll questions. Your questions should be specific to each article and spark meaningful debate about the article's unique aspects. Never use numbers or prefixes in the options."
+                    content: "You are a news analyst who creates engaging, opinion-based poll questions. Your questions should be specific to each article and spark meaningful debate about the article's unique aspects. Never use numbers or prefixes in the options. Focus on controversial aspects and ethical implications of the news story. Make questions that require people to take a stance on the specific issues raised in the article."
                 },
                 {
                     role: "user",
                     content: prompt
                 }
             ],
-            temperature: 0.8,
+            temperature: 0.9,
             max_tokens: 200
         });
 

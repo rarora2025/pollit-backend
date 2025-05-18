@@ -1,7 +1,25 @@
 // API configuration
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:3000/api'  // Local development
-    : 'https://pollit-backend-6b36ba4351c1.herokuapp.com/api';  // Production URL
+const API_BASE_URL = (() => {
+    const hostname = window.location.hostname;
+    console.log('Current hostname:', hostname);
+    
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:3000/api';
+    }
+    
+    // For GitHub Pages
+    if (hostname.includes('github.io')) {
+        return 'https://pollit-backend-6b36ba4351c1.herokuapp.com/api';
+    }
+    
+    // For Heroku
+    if (hostname.includes('herokuapp.com')) {
+        return '/api';
+    }
+    
+    // Default to production URL
+    return 'https://pollit-backend-6b36ba4351c1.herokuapp.com/api';
+})();
 
 // Common fetch options for CORS
 const fetchOptions = {
@@ -9,12 +27,13 @@ const fetchOptions = {
     credentials: 'omit',
     headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Origin': window.location.origin
     }
 };
 
 // Log the current API configuration
-console.log('Current hostname:', window.location.hostname);
+console.log('Current origin:', window.location.origin);
 console.log('Using API URL:', API_BASE_URL);
 
 // News categories and their corresponding API queries
@@ -160,7 +179,13 @@ async function fetchNews() {
         const url = `${API_BASE_URL}/news?q=top`;
         console.log('Fetching from:', url);
         
-        const response = await fetch(url, fetchOptions);
+        const response = await fetch(url, {
+            ...fetchOptions,
+            headers: {
+                ...fetchOptions.headers,
+                'Origin': window.location.origin
+            }
+        });
         console.log('Response status:', response.status);
         
         if (!response.ok) {
@@ -450,10 +475,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const url = `${API_BASE_URL}/news?q=${encodeURIComponent(searchTerm)}`;
                 console.log('Searching news from:', url);
                 
-                const response = await fetch(url, fetchOptions);
+                const response = await fetch(url, {
+                    ...fetchOptions,
+                    headers: {
+                        ...fetchOptions.headers,
+                        'Origin': window.location.origin
+                    }
+                });
                 console.log('Search response status:', response.status);
                 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Search error response:', errorText);
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
