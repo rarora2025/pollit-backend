@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 
 // CORS configuration
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://rarora2025.github.io', 'https://pollit-backend-6b36ba4351c1.herokuapp.com'],
+    origin: '*',  // Allow all origins in production
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
     credentials: false
@@ -100,7 +100,8 @@ app.get('/api/proxy-image', async (req, res) => {
         const response = await fetch(imageUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Accept': 'image/*'
+                'Accept': 'image/*',
+                'Referer': 'https://newsapi.org/'
             }
         });
 
@@ -112,6 +113,8 @@ app.get('/api/proxy-image', async (req, res) => {
             const fallbackResponse = await fetch(fallbackUrl);
             res.set('Content-Type', fallbackResponse.headers.get('content-type'));
             res.set('Access-Control-Allow-Origin', '*');
+            res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
             fallbackResponse.body.pipe(res);
             return;
         }
@@ -119,6 +122,8 @@ app.get('/api/proxy-image', async (req, res) => {
         // Forward the content type and set CORS headers
         res.set('Content-Type', response.headers.get('content-type'));
         res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
         
         // Stream the image data
         response.body.pipe(res);
@@ -130,6 +135,8 @@ app.get('/api/proxy-image', async (req, res) => {
         const fallbackResponse = await fetch(fallbackUrl);
         res.set('Content-Type', fallbackResponse.headers.get('content-type'));
         res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
         fallbackResponse.body.pipe(res);
     }
 });
@@ -181,6 +188,11 @@ app.get('/api/news', async (req, res) => {
             });
 
             console.log(`Found ${filteredArticles.length} articles after filtering for query: ${query}`);
+            
+            // Set CORS headers
+            res.set('Access-Control-Allow-Origin', '*');
+            res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+            res.set('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
             
             // Return the filtered articles
             res.json({

@@ -453,6 +453,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(url, fetchOptions);
                 console.log('Search response status:', response.status);
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 console.log('Search data received:', data);
                 
