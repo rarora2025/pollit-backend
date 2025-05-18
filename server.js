@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 
 // CORS configuration
 app.use(cors({
-    origin: '*',  // Allow all origins in production
+    origin: ['https://rarora2025.github.io', 'http://localhost:3000', 'https://pollit-backend-6b36ba4351c1.herokuapp.com'],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization', 'Origin'],
     exposedHeaders: ['Content-Type', 'Access-Control-Allow-Origin'],
