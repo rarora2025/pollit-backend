@@ -229,6 +229,7 @@ async function fetchNews() {
 // Generate poll content using OpenAI
 async function generatePollContent(article) {
     try {
+        console.log('Generating poll content for:', article.title);
         const response = await fetch(`${API_BASE_URL}/generate-content`, {
             ...fetchOptions,
             method: 'POST',
@@ -236,16 +237,21 @@ async function generatePollContent(article) {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json();
+            console.error('Error response from server:', errorData);
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('Received poll content:', data);
         
         if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-            throw new Error('Invalid response format');
+            console.error('Invalid response format:', data);
+            throw new Error('Invalid response format from server');
         }
 
         const content = data.choices[0].message.content;
+        console.log('Parsing content:', content);
         
         // Parse the response to extract question and answers
         const lines = content.split('\n')
@@ -258,10 +264,13 @@ async function generatePollContent(article) {
             // Remove any dashes
             .map(line => line.replace(/^-\s*/, ''));
 
+        console.log('Parsed lines:', lines);
+
         const question = lines[0];
         const answers = lines.slice(1);
 
         if (!question || answers.length !== 3) {
+            console.error('Invalid poll format:', { question, answers });
             return {
                 question: "What's your take on this news?",
                 answers: [

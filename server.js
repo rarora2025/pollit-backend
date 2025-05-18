@@ -227,8 +227,11 @@ app.post('/api/generate-content', async (req, res) => {
     try {
         const { article } = req.body;
         if (!article) {
+            console.error('No article provided in request');
             return res.status(400).json({ error: 'Article is required' });
         }
+
+        console.log('Generating poll content for article:', article.title);
 
         const prompt = `Create a thought-provoking, opinion-based poll question specifically about this news article. The question should be directly related to the article's content and ask for people's views on the specific implications, outcomes, or ethical considerations raised in the article.
 
@@ -256,10 +259,12 @@ Remember:
 - Each option should be a complete thought that relates to the article
 - Do not use any numbering or prefixes in the options`;
 
+        console.log('Initializing OpenAI client...');
         const openai = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY
         });
 
+        console.log('Making OpenAI API request...');
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
             messages: [
@@ -276,10 +281,26 @@ Remember:
             max_tokens: 200
         });
 
+        console.log('OpenAI response received:', response);
+        
+        if (!response.choices || !response.choices[0] || !response.choices[0].message) {
+            console.error('Invalid OpenAI response format:', response);
+            throw new Error('Invalid response format from OpenAI');
+        }
+
         res.json(response);
     } catch (error) {
-        console.error('Error generating content:', error);
-        res.status(500).json({ error: 'Error generating content' });
+        console.error('Error in generate-content endpoint:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response?.data
+        });
+        res.status(500).json({ 
+            error: 'Error generating content',
+            message: error.message,
+            details: error.response?.data || 'No additional details available'
+        });
     }
 });
 
