@@ -51,7 +51,7 @@ const newsCategories = {
     },
     sports: {
         name: 'Sports',
-        query: 'sports OR athletics OR competition OR game OR tournament OR championship OR player',
+        query: '(sports OR athletics OR competition OR game OR tournament OR championship OR player) AND (NBA OR NFL OR MLB OR NHL OR soccer OR football OR basketball OR baseball OR hockey OR tennis OR golf OR Olympics) NOT (video game OR gaming OR esports)',
         description: 'Sports news and athletic updates'
     },
     environment: {
@@ -276,56 +276,65 @@ async function displayArticles() {
         return;
     }
 
-    articlesContainer.innerHTML = '';
-    console.log('Creating article elements...');
-    
-    for (const [index, article] of articles.entries()) {
-        console.log(`Creating article ${index + 1} of ${articles.length}`);
-        const articleElement = document.createElement('div');
-        articleElement.className = 'article-card';
-        if (index === currentIndex) {
-            articleElement.classList.add('visible');
-        }
+    // Display the current article
+    await displayCurrentArticle();
+    updateNavigation();
+}
 
-        // Create the card structure first
-        articleElement.innerHTML = `
-            <div class="article-image-container">
-                <img src="${article.urlToImage ? `${API_BASE_URL}/proxy-image?url=${encodeURIComponent(article.urlToImage)}` : 'fallback.svg'}" 
-                     alt="${article.title}" 
-                     class="article-image" 
-                     onerror="this.onerror=null; this.src='fallback.svg'; this.classList.add('fallback-image');"
-                     loading="lazy">
-            </div>
-            <div class="article-content">
-                <h2 class="article-title">${article.title}</h2>
-                <p class="article-summary">${article.description || 'No description available'}</p>
-                <div class="poll-section">
-                    <div class="loading-container">
-                        <div class="loading-animation">
-                            <div class="loading-bar">
-                                <div class="loading-progress"></div>
-                            </div>
-                            <div class="loading-text">Loading Poll</div>
+// Display the current article
+async function displayCurrentArticle() {
+    if (currentIndex < 0 || currentIndex >= articles.length) return;
+    
+    const article = articles[currentIndex];
+    console.log(`Displaying article ${currentIndex + 1} of ${articles.length}`);
+    
+    // Create the article element
+    const articleElement = document.createElement('div');
+    articleElement.className = 'article-card visible';
+
+    // Create the card structure
+    articleElement.innerHTML = `
+        <div class="article-image-container">
+            <img src="${article.urlToImage ? `${API_BASE_URL}/proxy-image?url=${encodeURIComponent(article.urlToImage)}` : 'fallback.svg'}" 
+                 alt="${article.title}" 
+                 class="article-image" 
+                 onerror="this.onerror=null; this.src='fallback.svg'; this.classList.add('fallback-image');"
+                 loading="lazy">
+        </div>
+        <div class="article-content">
+            <h2 class="article-title">${article.title}</h2>
+            <p class="article-summary">${article.description || 'No description available'}</p>
+            <div class="poll-section">
+                <div class="loading-container">
+                    <div class="loading-animation">
+                        <div class="loading-bar">
+                            <div class="loading-progress"></div>
                         </div>
+                        <div class="loading-text">Loading Poll</div>
                     </div>
                 </div>
-                <div class="article-meta">
-                    <span class="source">${article.source.name}</span>
-                    <span class="date">${new Date(article.publishedAt).toLocaleDateString()}</span>
-                    <a href="${article.url}" target="_blank" class="read-more">
-                        Read Full Article
-                        <span class="read-more-icon">→</span>
-                    </a>
-                </div>
             </div>
-        `;
-        articlesContainer.appendChild(articleElement);
+            <div class="article-meta">
+                <span class="source">${article.source.name}</span>
+                <span class="date">${new Date(article.publishedAt).toLocaleDateString()}</span>
+                <a href="${article.url}" target="_blank" class="read-more">
+                    Read Full Article
+                    <span class="read-more-icon">→</span>
+                </a>
+            </div>
+        </div>
+    `;
 
-        // Generate poll content using OpenAI
-        const pollContent = await generatePollContent(article);
-        
-        // Update the poll section with the generated content
-        const pollSection = articleElement.querySelector('.poll-section');
+    // Clear the container and add the new card
+    articlesContainer.innerHTML = '';
+    articlesContainer.appendChild(articleElement);
+
+    // Generate poll content using OpenAI
+    const pollContent = await generatePollContent(article);
+    
+    // Update the poll section with the generated content
+    const pollSection = articleElement.querySelector('.poll-section');
+    if (pollSection) {
         pollSection.innerHTML = `
             <h3>${pollContent.question}</h3>
             <div class="poll-options">
@@ -337,9 +346,6 @@ async function displayArticles() {
             </div>
         `;
     }
-    
-    console.log('Articles displayed successfully');
-    updateNavigation();
 }
 
 // Update navigation buttons
@@ -352,44 +358,38 @@ function updateNavigation() {
 }
 
 // Navigate to next article
-function nextArticle() {
+async function nextArticle() {
     if (isTransitioning || currentIndex >= articles.length - 1) return;
     
     isTransitioning = true;
-    const currentCard = articlesContainer.children[currentIndex];
-    const nextCard = articlesContainer.children[currentIndex + 1];
+    currentIndex++;
+    await displayCurrentArticle();
+    updateNavigation();
     
-    if (currentCard && nextCard) {
-        currentCard.classList.remove('visible');
-        nextCard.classList.add('visible');
-        
-        currentIndex++;
-        updateNavigation();
-    }
-    isTransitioning = false;
+    // Add a small delay before allowing next transition
+    setTimeout(() => {
+        isTransitioning = false;
+    }, 300);
 }
 
 // Navigate to previous article
-function prevArticle() {
+async function prevArticle() {
     if (isTransitioning || currentIndex <= 0) return;
     
     isTransitioning = true;
-    const currentCard = articlesContainer.children[currentIndex];
-    const prevCard = articlesContainer.children[currentIndex - 1];
+    currentIndex--;
+    await displayCurrentArticle();
+    updateNavigation();
     
-    if (currentCard && prevCard) {
-        currentCard.classList.remove('visible');
-        prevCard.classList.add('visible');
-        
-        currentIndex--;
-        updateNavigation();
-    }
-    isTransitioning = false;
+    // Add a small delay before allowing next transition
+    setTimeout(() => {
+        isTransitioning = false;
+    }, 300);
 }
 
 // Handle poll votes
 function handleVote(option) {
-    // Move to the next card by calling nextArticle
+    if (isTransitioning) return;
     nextArticle();
 }
 

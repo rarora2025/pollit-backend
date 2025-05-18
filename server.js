@@ -4,6 +4,7 @@ import fetch from 'node-fetch';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import OpenAI from 'openai';
 
 // Load environment variables
 dotenv.config();
@@ -198,83 +199,64 @@ app.get('/api/news', async (req, res) => {
     }
 });
 
-// Generate poll content endpoint
+// Generate content using OpenAI
 app.post('/api/generate-content', async (req, res) => {
     try {
         const { article } = req.body;
-        
-        const prompt = `Given this news article:
-Title: ${article.title}
-Description: ${article.description}
-
-Create a simple, direct poll question and 3 answer options about this article. Keep everything concise and clear.
-
-Rules:
-1. Start the question directly - no prefixes like "Poll Question:" or "Question:"
-2. Make answer options simple and direct - no numbering, prefixes, or dashes
-3. Keep questions and answers short and to the point
-4. Make everything specific to this article's content
-5. Provide exactly 3 answer options`;
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: "gpt-3.5-turbo", // Changed to a more reliable model
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a news analyst who creates simple, direct poll questions. Create clear questions and exactly 3 answer options without any prefixes, numbering, or dashes."
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 200
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('OpenAI API error:', errorData);
-            throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+        if (!article) {
+            return res.status(400).json({ error: 'Article is required' });
         }
 
-        const data = await response.json();
-        const content = data.choices[0].message.content;
-        
-        // Parse the response - looking for question and options
-        const lines = content.split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0)
-            // Remove any common prefixes from questions
-            .map(line => line.replace(/^(poll question|question|q|option|answer|choice|a|o)[:.]?\s*/i, ''))
-            // Remove any numbering from answers
-            .map(line => line.replace(/^\d+[.)]\s*/, ''))
-            // Remove any dashes from answers
-            .map(line => line.replace(/^-\s*/, ''));
+        const prompt = `Create a thought-provoking, opinion-based poll question specifically about this news article. The question should be directly related to the article's content and ask for people's views on the specific implications, outcomes, or ethical considerations raised in the article.
 
-        const question = lines[0];
-        const options = lines.slice(1, 4); // Get first 3 options
+Article Title: ${article.title}
+Article Description: ${article.description}
 
-        res.json({
-            choices: [{
-                message: {
-                    content: `${question}\n${options.join('\n')}`
+Format your response exactly like this:
+poll question: [Your specific, opinion-based question about this article]
+option: [First opinion option that directly relates to the article]
+option: [Second opinion option that directly relates to the article]
+option: [Third opinion option that directly relates to the article]
+
+Example format (based on a tech article):
+poll question: Should companies be required to disclose their AI training data sources?
+option: Yes, transparency is crucial for ethical AI development
+option: No, it could expose trade secrets and competitive advantages
+option: Only for high-risk applications, with exceptions for proprietary data
+
+Remember:
+- Make the question SPECIFIC to this article's content
+- Focus on the article's unique aspects or implications
+- Create options that reflect different viewpoints on the article's specific topic
+- Avoid generic questions like "What's your take" or "Do you agree"
+- Make it controversial enough to spark debate
+- Each option should be a complete thought that relates to the article
+- Do not use any numbering or prefixes in the options`;
+
+        const openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY
+        });
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: [
+                {
+                    role: "system",
+                    content: "You are a news analyst who creates engaging, opinion-based poll questions. Your questions should be specific to each article and spark meaningful debate about the article's unique aspects. Never use numbers or prefixes in the options."
+                },
+                {
+                    role: "user",
+                    content: prompt
                 }
-            }]
+            ],
+            temperature: 0.8,
+            max_tokens: 200
         });
+
+        res.json(response);
     } catch (error) {
-        console.error('Error generating poll content:', error);
-        res.status(500).json({
-            error: 'Error generating poll content',
-            message: error.message
-        });
+        console.error('Error generating content:', error);
+        res.status(500).json({ error: 'Error generating content' });
     }
 });
 
