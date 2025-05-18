@@ -17,9 +17,9 @@ const PORT = process.env.PORT || 3000;
 
 // CORS configuration
 app.use(cors({
-    origin: '*',  // Allow all origins in production
+    origin: ['http://localhost:3000', 'https://rarora2025.github.io', 'https://pollit-backend-6b36ba4351c1.herokuapp.com'],
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
     credentials: false
 }));
 
@@ -99,7 +99,8 @@ app.get('/api/proxy-image', async (req, res) => {
         // Try to fetch the original image first
         const response = await fetch(imageUrl, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'image/*'
             }
         });
 
@@ -110,12 +111,14 @@ app.get('/api/proxy-image', async (req, res) => {
             console.log('Using fallback image:', fallbackUrl);
             const fallbackResponse = await fetch(fallbackUrl);
             res.set('Content-Type', fallbackResponse.headers.get('content-type'));
+            res.set('Access-Control-Allow-Origin', '*');
             fallbackResponse.body.pipe(res);
             return;
         }
 
-        // Forward the content type
+        // Forward the content type and set CORS headers
         res.set('Content-Type', response.headers.get('content-type'));
+        res.set('Access-Control-Allow-Origin', '*');
         
         // Stream the image data
         response.body.pipe(res);
@@ -126,6 +129,7 @@ app.get('/api/proxy-image', async (req, res) => {
         console.log('Using fallback image due to error:', fallbackUrl);
         const fallbackResponse = await fetch(fallbackUrl);
         res.set('Content-Type', fallbackResponse.headers.get('content-type'));
+        res.set('Access-Control-Allow-Origin', '*');
         fallbackResponse.body.pipe(res);
     }
 });

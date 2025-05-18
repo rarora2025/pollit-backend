@@ -1,6 +1,6 @@
 // API configuration
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? '/api'  // Local development
+    ? 'http://localhost:3000/api'  // Local development
     : 'https://pollit-backend-6b36ba4351c1.herokuapp.com/api';  // Production URL
 
 // Common fetch options for CORS
