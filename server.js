@@ -151,6 +151,7 @@ app.get('/api/proxy-image', async (req, res) => {
 app.get('/api/news', async (req, res) => {
     try {
         const query = req.query.q || 'top';
+        console.log('Received news request with query:', query);
         let url;
         
         // Handle different types of queries
@@ -172,6 +173,7 @@ app.get('/api/news', async (req, res) => {
         
         const data = await response.json();
         console.log('News API response status:', data.status);
+        console.log('Number of articles received:', data.articles?.length || 0);
         
         if (data.status === 'ok') {
             // Simple filtering to ensure we have valid articles
